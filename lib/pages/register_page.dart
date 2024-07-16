@@ -200,18 +200,19 @@ class _RegisterPageState extends State<RegisterPage> {
               isLoading = true;
             });
             try {
-              if ((_registerFormKey.currentState?.validate() ?? false) &&
-                  selectedImage != null) {
+              if ((_registerFormKey.currentState?.validate() ?? false)) {
                 _registerFormKey.currentState?.save();
-                // if (selectedImage == null) {
-                //   selectedImage = NetworkImage (PLACEHOLDER_PFP);
-                // }
                 bool result = await _authService.signup(email!, password!);
                 if (result) {
-                  String? pfpURL = await _storageService.uploadUserPfp(
-                    file: selectedImage!,
-                    uid: _authService.user!.uid,
-                  );
+                  String? pfpURL;
+                  if (selectedImage == null) {
+                    pfpURL = PLACEHOLDER_PFP;
+                  } else {
+                    pfpURL = await _storageService.uploadUserPfp(
+                      file: selectedImage!,
+                      uid: _authService.user!.uid,
+                    );
+                  }
                   if (pfpURL != null) {
                     await _databaseService.createUserPRofile(
                       userProfile: UserProfile(
