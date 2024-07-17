@@ -1,5 +1,6 @@
+import 'package:chat/pages/settings_page.dart';
+import 'package:chat/pages/verification_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:chat/pages/login_page.dart';
 import 'package:chat/pages/home_page.dart';
 import 'package:chat/pages/register_page.dart';
@@ -11,7 +12,8 @@ class NavigationService {
     "/login": (context) => const LoginPage(),
     "/register": (context) => const RegisterPage(),
     "/home": (context) => const Homepage(),
-
+    "/settings": (context) => const SettingsPage(),
+    "/verification": (context) => const VerificationPage(),
   };
 
   Map<String, Widget Function(BuildContext)> get routes {

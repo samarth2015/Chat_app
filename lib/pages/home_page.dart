@@ -21,47 +21,36 @@ class _HomepageState extends State<Homepage> {
 
   late AuthService _authService;
   late NavigationService _navigationService;
-  late AlertService _alertService;
   late DatabaseService _databaseService;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _authService = _getIt.get<AuthService>();
     _navigationService = _getIt.get<NavigationService>();
-    _alertService = _getIt.get<AlertService>();
     _databaseService = _getIt.get<DatabaseService>();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Messages",
-        ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              bool result = await _authService.logout();
-              if (result) {
-                _alertService.showToast(
-                  text: "Logged out successfully",
-                  icon: Icons.check,
-                );
-                _navigationService.pushReplacementNamed("/login");
-              }
-            },
-            color: Colors.red,
-            icon: Icon(
-              Icons.logout,
+            appBar: AppBar(
+              title: const Text(
+                "Messages",
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    _navigationService.pushNamed("/settings");
+                  },
+                  icon: Icon(Icons.settings),
+                  color: Colors.black,
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-      body: _buildUI(),
-    );
+            body: _buildUI(),
+          )
+        ;
   }
 
   Widget _buildUI() {
