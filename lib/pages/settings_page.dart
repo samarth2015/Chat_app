@@ -1,7 +1,11 @@
+import 'package:chat/models/user_profile.dart';
 import 'package:chat/services/alert_service.dart';
 import 'package:chat/services/auth_service.dart';
 import 'package:chat/services/database_service.dart';
+import 'package:chat/services/media_service.dart';
 import 'package:chat/services/navigation_service.dart';
+import 'package:chat/services/storage_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
@@ -20,6 +24,8 @@ class _SettingsPageState extends State<SettingsPage> {
   late NavigationService _navigationService;
   late AlertService _alertService;
   late DatabaseService _databaseService;
+  late MediaService _mediaService;
+  late StorageService _storageService;
 
   final TextEditingController _controller = TextEditingController();
 
@@ -30,6 +36,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _navigationService = _getIt.get<NavigationService>();
     _alertService = _getIt.get<AlertService>();
     _databaseService = _getIt.get<DatabaseService>();
+    _mediaService = _getIt.get<MediaService>();
+    _storageService = _getIt.get<StorageService>();
   }
 
   @override
@@ -60,10 +68,31 @@ class _SettingsPageState extends State<SettingsPage> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _showProfile(),
         _changeNameButton(),
+        _changePassword(),
+        _changePfp(),
         _logoutButton(),
       ],
     );
+  }
+
+  Widget _showProfile() {
+    return StreamBuilder(
+        stream: _databaseService.getSelfProfile(),
+        builder: (context, snapshots) {
+          if (snapshots.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          UserProfile user = snapshots.data!.docs.first.data();
+          return ListTile(
+            title: Text(user.name!),
+            subtitle: Text(_authService.user!.email!),
+            leading: CircleAvatar(
+              backgroundImage: NetworkImage(user.pfpURL!),
+            ),
+          );
+        });
   }
 
   Widget _changeNameButton() {
@@ -73,6 +102,48 @@ class _SettingsPageState extends State<SettingsPage> {
         showDialog(context: context, builder: (context) => _changeNameAlert());
       },
       leading: const Icon(Icons.person),
+    );
+  }
+
+  Widget _changePassword() {
+    return ListTile(
+      title: const Text("Change Password"),
+      onTap: () {
+        _authService.resetPassword(_authService.user!.email!);
+        _alertService.showToast(
+          text: "Password reset email sent",
+          icon: Icons.check,
+        );
+      },
+      leading: const Icon(Icons.lock),
+    );
+  }
+
+  Widget _changePfp() {
+    return ListTile(
+      title: const Text("Change Profile Picture"),
+      onTap: () async {
+        final image = await _mediaService.getImageFromGallery();
+        if (image != null) {
+          final pfpURL = await _storageService.uploadUserPfp(
+            file: image,
+            uid: _authService.user!.uid,
+          );
+          if (pfpURL != null) {
+            await _databaseService.uploadProfilePicture(pfpURL);
+            _alertService.showToast(
+              text: "Profile picture changed successfully",
+              icon: Icons.check,
+            );
+          } else {
+            _alertService.showToast(
+              text: "Profile picture change failed",
+              icon: Icons.error,
+            );
+          }
+        }
+      },
+      leading: const Icon(Icons.image),
     );
   }
 
@@ -114,24 +185,29 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
       actions: [
-        IconButton(onPressed: () async {
-          final result = await _databaseService.changeUserName(_controller.text);
-          if(result){
-            _alertService.showToast(
-              text: "Name changed successfully",
-              icon: Icons.check,
-            );
-          } else {
-            _alertService.showToast(
-              text: "Name change failed",
-              icon: Icons.error,
-            );       
-          }
-          _navigationService.goBack();
-        }, icon: Icon(Icons.check)),
-        IconButton(onPressed: () {
-          _navigationService.goBack();
-        }, icon: Icon(Icons.close)),
+        IconButton(
+            onPressed: () async {
+              final result =
+                  await _databaseService.changeUserName(_controller.text);
+              if (result) {
+                _alertService.showToast(
+                  text: "Name changed successfully",
+                  icon: Icons.check,
+                );
+              } else {
+                _alertService.showToast(
+                  text: "Name change failed",
+                  icon: Icons.error,
+                );
+              }
+              _navigationService.goBack();
+            },
+            icon: Icon(Icons.check)),
+        IconButton(
+            onPressed: () {
+              _navigationService.goBack();
+            },
+            icon: Icon(Icons.close)),
       ],
     );
   }
