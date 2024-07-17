@@ -14,6 +14,7 @@ class DatabaseService {
 
   CollectionReference? _usersCollection;
   CollectionReference? _chatsCollection;
+  CollectionReference? _unverifiedUsersCollection;
 
   DatabaseService() {
     _authService = _getIt.get<AuthService>();
@@ -27,6 +28,14 @@ class DatabaseService {
                   snapshots.data()!,
                 ),
             toFirestore: (userProfile, _) => userProfile.toJson());
+
+    _unverifiedUsersCollection =
+        _firebaseFirestore.collection('unverified_users').withConverter<UserProfile>(
+            fromFirestore: (snapshots, _) => UserProfile.fromJson(
+                  snapshots.data()!,
+                ),
+            toFirestore: (userProfile, _) => userProfile.toJson());
+    
     _chatsCollection =
         _firebaseFirestore.collection('chats').withConverter<Chat>(
               fromFirestore: (snapshots, _) => Chat.fromJson(snapshots.data()!),
@@ -34,7 +43,11 @@ class DatabaseService {
             );
   }
 
-  Future<void> createUserPRofile({required UserProfile userProfile}) async {
+  Future<void> createUnverifiedUserProfile({required UserProfile userProfile}) async {
+    await _unverifiedUsersCollection?.doc(userProfile.uid).set(userProfile);
+  }
+
+  Future<void> createUserProfile({required UserProfile userProfile}) async {
     await _usersCollection?.doc(userProfile.uid).set(userProfile);
   }
 
@@ -42,6 +55,17 @@ class DatabaseService {
     return _usersCollection
         ?.where("uid", isNotEqualTo: _authService.user?.uid)
         .snapshots() as Stream<QuerySnapshot<UserProfile>>;
+  }
+
+  Future<bool> changeUserName(String newName) async {
+    try {
+      await _usersCollection
+          ?.doc(_authService.user?.uid)
+          .update({"name": newName});
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> checkChatExists(String uid1, String uid2) async {

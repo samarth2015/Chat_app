@@ -39,6 +39,27 @@ class AuthService {
     return false;
   }
 
+  Future<bool> emailVerification() async {
+    try {
+      await _user!.sendEmailVerification();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> checkEmailVerification() async {
+    try {
+      print("Here1");
+      await _user!.reload();
+      _user = _firebaseAuth.currentUser;
+      print("Here2");
+      return _user!.emailVerified;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<bool> logout() async {
     try {
       await _firebaseAuth.signOut();
