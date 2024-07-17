@@ -4,6 +4,7 @@ import 'package:chat/models/user_profile.dart';
 import 'package:chat/services/auth_service.dart';
 import 'package:chat/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 
 class DatabaseService {
@@ -57,11 +58,39 @@ class DatabaseService {
         .snapshots() as Stream<QuerySnapshot<UserProfile>>;
   }
 
+  Stream<QuerySnapshot<UserProfile>>? getSelfProfile() {
+    try {
+    return _usersCollection
+        ?.where("uid", isEqualTo: _authService.user?.uid)
+        .snapshots() as Stream<QuerySnapshot<UserProfile>>;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<UserProfile> getSelfUnverifiedProfile() async {
+    final varo = await _unverifiedUsersCollection
+        ?.where("uid", isEqualTo: _authService.user?.uid)
+        .get() as QuerySnapshot<UserProfile>;
+    return varo.docs.first.data();
+  }
+
   Future<bool> changeUserName(String newName) async {
     try {
       await _usersCollection
           ?.doc(_authService.user?.uid)
           .update({"name": newName});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> uploadProfilePicture(String pfpURL) async {
+    try {
+      await _usersCollection
+          ?.doc(_authService.user?.uid)
+          .update({"pfpURL": pfpURL});
       return true;
     } catch (e) {
       return false;

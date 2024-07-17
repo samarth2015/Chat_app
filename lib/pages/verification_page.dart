@@ -1,5 +1,7 @@
+import 'package:chat/models/user_profile.dart';
 import 'package:chat/services/alert_service.dart';
 import 'package:chat/services/auth_service.dart';
+import 'package:chat/services/database_service.dart';
 import 'package:chat/services/navigation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -17,6 +19,7 @@ class _VerificationPageState extends State<VerificationPage> {
   late AuthService _authService;
   late NavigationService _navigationService;
   late AlertService _alertService;
+  late DatabaseService _databaseService;
 
   @override
   void initState() {
@@ -24,6 +27,7 @@ class _VerificationPageState extends State<VerificationPage> {
     _authService = _getIt.get<AuthService>();
     _navigationService = _getIt.get<NavigationService>();
     _alertService = _getIt.get<AlertService>();
+    _databaseService = _getIt.get<DatabaseService>();
   }
 
   @override
@@ -34,7 +38,7 @@ class _VerificationPageState extends State<VerificationPage> {
             IconButton(
               onPressed: () {
                 _authService.logout();
-                _navigationService.goBack();
+                _navigationService.pushReplacementNamed("/login");
               },
               icon: const Icon(Icons.logout),
             ),
@@ -69,10 +73,13 @@ class _VerificationPageState extends State<VerificationPage> {
                       _alertService.showToast(text: "Email not verified yet.");
                     } else {
                       _alertService.showToast(text: "Email verified.");
-                      Navigator.of(context).pop(true);
+                      UserProfile user = await _databaseService.getSelfUnverifiedProfile();
+                      await _databaseService.createUserProfile(userProfile: user);
+                      _navigationService.pushReplacementNamed("/home");
+                      // _navigationService.goBack();
                     }
                   },
-                  title: const Text("I verified my Email"),
+                  title: const Text("Email Verified - Continue"),
                   leading: const Icon(Icons.check_circle),
                 ),
               ],

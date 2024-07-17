@@ -220,7 +220,7 @@ class _RegisterPageState extends State<RegisterPage> {
               _registerFormKey.currentState?.save();
               // bool result = false;
               bool result = await _authService.signup(email!, password!);
-              // _completeUnverifiedRegistration();
+              _completeUnverifiedRegistration();
               if (result) {
                 await _authService.emailVerification();
                 _alertService.showToast(text: "Verification email sent.");
@@ -233,12 +233,12 @@ class _RegisterPageState extends State<RegisterPage> {
             );
           }
         },
-        color: Theme.of(context).colorScheme.primary,
+        color: Colors.blue,
         child: const Text(
           "Verify Email and Register",
           style: TextStyle(
             color: Colors.white,
-            // fontSize: 20,
+            fontSize: 20,
           ),
         ),
       ),
@@ -303,7 +303,6 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     }
   }
-
 
   Widget _loginAccountLink() {
     return Expanded(

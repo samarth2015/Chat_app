@@ -4,7 +4,6 @@ class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   User? _user;
-
   User? get user => _user;
 
   AuthService() {
@@ -50,16 +49,23 @@ class AuthService {
 
   Future<bool> checkEmailVerification() async {
     try {
-      print("Here1");
       await _user!.reload();
       _user = _firebaseAuth.currentUser;
-      print("Here2");
       return _user!.emailVerified;
     } catch (e) {
       return false;
     }
   }
 
+  Future<bool> resetPassword(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return true;
+    } catch (e) {
+    return false;
+    }
+  }
+  
   Future<bool> logout() async {
     try {
       await _firebaseAuth.signOut();
