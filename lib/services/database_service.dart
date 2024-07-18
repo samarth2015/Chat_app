@@ -4,7 +4,6 @@ import 'package:chat/models/user_profile.dart';
 import 'package:chat/services/auth_service.dart';
 import 'package:chat/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 
 class DatabaseService {
@@ -30,13 +29,14 @@ class DatabaseService {
                 ),
             toFirestore: (userProfile, _) => userProfile.toJson());
 
-    _unverifiedUsersCollection =
-        _firebaseFirestore.collection('unverified_users').withConverter<UserProfile>(
+    _unverifiedUsersCollection = _firebaseFirestore
+        .collection('unverified_users')
+        .withConverter<UserProfile>(
             fromFirestore: (snapshots, _) => UserProfile.fromJson(
                   snapshots.data()!,
                 ),
             toFirestore: (userProfile, _) => userProfile.toJson());
-    
+
     _chatsCollection =
         _firebaseFirestore.collection('chats').withConverter<Chat>(
               fromFirestore: (snapshots, _) => Chat.fromJson(snapshots.data()!),
@@ -44,11 +44,13 @@ class DatabaseService {
             );
   }
 
-  Future<void> createUnverifiedUserProfile({required UserProfile userProfile}) async {
+  Future<void> createUnverifiedUserProfile(
+      {required UserProfile userProfile}) async {
     await _unverifiedUsersCollection?.doc(userProfile.uid).set(userProfile);
   }
 
   Future<void> createUserProfile({required UserProfile userProfile}) async {
+    // print("came here to create profile");
     await _usersCollection?.doc(userProfile.uid).set(userProfile);
   }
 
@@ -60,9 +62,9 @@ class DatabaseService {
 
   Stream<QuerySnapshot<UserProfile>>? getSelfProfile() {
     try {
-    return _usersCollection
-        ?.where("uid", isEqualTo: _authService.user?.uid)
-        .snapshots() as Stream<QuerySnapshot<UserProfile>>;
+      return _usersCollection
+          ?.where("uid", isEqualTo: _authService.user?.uid)
+          .snapshots() as Stream<QuerySnapshot<UserProfile>>;
     } catch (e) {
       return null;
     }
@@ -72,6 +74,7 @@ class DatabaseService {
     final varo = await _unverifiedUsersCollection
         ?.where("uid", isEqualTo: _authService.user?.uid)
         .get() as QuerySnapshot<UserProfile>;
+    // print("I was here");
     return varo.docs.first.data();
   }
 
@@ -80,6 +83,17 @@ class DatabaseService {
       await _usersCollection
           ?.doc(_authService.user?.uid)
           .update({"name": newName});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> changeUserBio(String newBio) async {
+    try {
+      await _usersCollection
+          ?.doc(_authService.user?.uid)
+          .update({"bio": newBio});
       return true;
     } catch (e) {
       return false;
@@ -127,5 +141,15 @@ class DatabaseService {
   Stream getChatData(String uid1, String uid2) {
     String chatID = generateChatID(uid1: uid1, uid2: uid2);
     return _chatsCollection!.doc(chatID).snapshots();
+  }
+
+  Future<bool> deleteChat(String uid1, String uid2) async {
+    String chatID = generateChatID(uid1: uid1, uid2: uid2);
+    try {
+      await _chatsCollection!.doc(chatID).delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
