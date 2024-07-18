@@ -33,14 +33,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigationService.navigatorKey,
-      title: 'Flutter Demo',  
+      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
         textTheme: GoogleFonts.montserratTextTheme(),
       ),
       // home: const LoginPage(),
-      initialRoute: _authService.user != null ? _authService.user!.emailVerified ? "/home" : "/verification" : "/login",
+      initialRoute: _authService.user != null
+          ? _authService.user!.emailVerified
+              ? "/home"
+              : "/verification"
+          : "/login",
       routes: _navigationService.routes,
     );
   }

@@ -76,7 +76,6 @@ class _VerificationPageState extends State<VerificationPage> {
                       UserProfile user = await _databaseService.getSelfUnverifiedProfile();
                       await _databaseService.createUserProfile(userProfile: user);
                       _navigationService.pushReplacementNamed("/home");
-                      // _navigationService.goBack();
                     }
                   },
                   title: const Text("Email Verified - Continue"),

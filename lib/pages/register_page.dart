@@ -224,6 +224,12 @@ class _RegisterPageState extends State<RegisterPage> {
               if (result) {
                 await _authService.emailVerification();
                 _alertService.showToast(text: "Verification email sent.");
+              } else {
+                _alertService.showToast(
+                    text: "Failed to register. Please try again.");
+                setState(() {
+                  isLoading = false;
+                });
               }
             }
           } catch (e) {

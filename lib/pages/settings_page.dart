@@ -85,11 +85,17 @@ class _SettingsPageState extends State<SettingsPage> {
             return const Center(child: CircularProgressIndicator());
           }
           UserProfile user = snapshots.data!.docs.first.data();
-          return ListTile(
-            title: Text(user.name!),
-            subtitle: Text(_authService.user!.email!),
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(user.pfpURL!),
+          return GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, "/user-profile", arguments: user);
+            },
+            child: ListTile(
+              title: Text(user.name!),
+              subtitle: Text(_authService.user!.email!,
+                  style: const TextStyle(overflow: TextOverflow.ellipsis)),
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(user.pfpURL!),
+              ),
             ),
           );
         });

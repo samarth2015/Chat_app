@@ -12,6 +12,7 @@ import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:chat/models/chat.dart';
+import 'package:worldtime/worldtime.dart';
 
 class ChatPage extends StatefulWidget {
   final UserProfile chatUser;
@@ -52,7 +53,28 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.chatUser.name!),
+        title: GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, "/user-profile",
+                arguments: widget.chatUser);
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 30,
+                width: 30,
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(otherUser!.profileImage!),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(widget.chatUser.name!),
+            ],
+          ),
+        ),
       ),
       body: _buildUI(),
     );
