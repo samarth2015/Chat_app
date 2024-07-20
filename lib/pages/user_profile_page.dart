@@ -1,3 +1,4 @@
+import 'package:chat/consts.dart';
 import 'package:chat/services/auth_service.dart';
 import 'package:chat/services/database_service.dart';
 import 'package:chat/services/navigation_service.dart';
@@ -19,6 +20,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   late DatabaseService _databaseService;
   late AuthService _authService;
   late NavigationService _navigationService;
+
+  final GlobalKey<FormState> _bioFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -86,14 +89,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ],
             ),
             // Expanded(child: GridView.builder(gridDelegate: gridDelegate, itemBuilder: itemBuilder)),
-            if(widget.user.uid != _authService.user!.uid) ListTile(
-              leading: Icon(Icons.delete_forever_rounded),
-              title: Text("Delete this chat"),
-              onTap: () {
-                showDialog(
-                    context: context, builder: (context) => _showDeleteAlert());
-              },
-            )
+            if (widget.user.uid != _authService.user!.uid)
+              ListTile(
+                leading: Icon(Icons.delete_forever_rounded),
+                title: Text("Delete this chat"),
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) => _showDeleteAlert());
+                },
+              )
           ],
         ),
       ),
@@ -118,17 +123,30 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget _changeBioAlert() {
     return AlertDialog(
       title: const Text("Change Bio"),
-      content: TextField(
-        controller: TextEditingController(text: widget.user.bio),
-        onChanged: (value) {
-          widget.user.bio = value;
-        },
+      content: Form(
+        key: _bioFormKey,
+        child: TextFormField(
+          controller: TextEditingController(text: widget.user.bio),
+          onSaved: (value) {
+            widget.user.bio = value;
+          },
+          validator: (value) {
+            if (value == null ||
+                BIO_VALIDATION_REGEX.hasMatch(value) == false) {
+              return "Bio cannot be empty";
+            }
+            return null;
+          },
+        ),
       ),
       actions: [
         IconButton(
             onPressed: () {
-              _databaseService.changeUserBio(widget.user.bio!);
-              Navigator.pop(context);
+              if (_bioFormKey.currentState?.validate() ?? false) {
+                _bioFormKey.currentState?.save();
+                _databaseService.changeUserBio(widget.user.bio!);
+                Navigator.pop(context);
+              }
             },
             icon: const Icon(Icons.check)),
         IconButton(
