@@ -3,6 +3,7 @@ import 'package:chat/services/alert_service.dart';
 import 'package:chat/services/auth_service.dart';
 import 'package:chat/services/navigation_service.dart';
 import 'package:chat/widgets/custom_form_field.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
@@ -17,6 +18,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final GetIt _getIt = GetIt.instance;
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _resetEmailFormKey = GlobalKey<FormState>();
 
   late AuthService _authService;
   late NavigationService _navigationService;
@@ -52,6 +54,7 @@ class _LoginPageState extends State<LoginPage> {
             _headerText(),
             _loginForm(),
             _loginButton(),
+            _forgetPasswordLink(),
             _createAnAccountLink(),
           ],
         ),
@@ -89,9 +92,9 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _loginForm() {
     return Container(
-      height: MediaQuery.sizeOf(context).height * 0.3,
-      margin: EdgeInsets.symmetric(
-        vertical: MediaQuery.sizeOf(context).height * 0.05,
+      height: MediaQuery.sizeOf(context).height * 0.20,
+      margin: EdgeInsets.only(
+        top: MediaQuery.sizeOf(context).height * 0.2,
       ),
       child: Form(
         key: _loginFormKey,
@@ -155,6 +158,75 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _forgetPasswordLink() {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        GestureDetector(
+          onTap: () {
+            showDialog(
+                context: context, builder: (context) => _resetPasswordDialog());
+          },
+          child: Padding(
+            padding:
+                EdgeInsets.only(top: MediaQuery.sizeOf(context).height * 0.02),
+            child: const Text(
+              "Forgot Password?",
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _resetPasswordDialog() {
+    return AlertDialog(
+      title: Text("Enter your email to reset password"),
+      content: Form(
+        key: _resetEmailFormKey,
+        child: CustomFormField(
+          hintText: "Email",
+          height: MediaQuery.sizeOf(context).height * 0.1,
+          validationRegExp: EMAIL_VALIDATION_REGEX,
+          onSaved: (value) {
+            setState(
+              () {
+                email = value;
+              },
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            if (_resetEmailFormKey.currentState?.validate() ?? false) {
+              _resetEmailFormKey.currentState?.save();
+              _authService.resetPassword(email!);
+              _alertService.showToast(
+                text: "Password reset email sent",
+                icon: Icons.check,
+              );
+              Navigator.pop(context);
+            }
+          },
+          child: const Text("Reset"),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text("Cancel"),
+        ),
+      ],
     );
   }
 
