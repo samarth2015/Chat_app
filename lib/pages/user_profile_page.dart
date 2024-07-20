@@ -86,7 +86,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ],
             ),
             // Expanded(child: GridView.builder(gridDelegate: gridDelegate, itemBuilder: itemBuilder)),
-            ListTile(
+            if(widget.user.uid != _authService.user!.uid) ListTile(
               leading: Icon(Icons.delete_forever_rounded),
               title: Text("Delete this chat"),
               onTap: () {

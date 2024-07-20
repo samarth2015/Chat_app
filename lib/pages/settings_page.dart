@@ -1,3 +1,4 @@
+import 'package:chat/consts.dart';
 import 'package:chat/models/user_profile.dart';
 import 'package:chat/services/alert_service.dart';
 import 'package:chat/services/auth_service.dart';
@@ -5,9 +6,7 @@ import 'package:chat/services/database_service.dart';
 import 'package:chat/services/media_service.dart';
 import 'package:chat/services/navigation_service.dart';
 import 'package:chat/services/storage_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -28,6 +27,9 @@ class _SettingsPageState extends State<SettingsPage> {
   late StorageService _storageService;
 
   final TextEditingController _controller = TextEditingController();
+
+  final GlobalKey<FormState> _changeNameFormKey = GlobalKey<FormState>();
+  final RegExp nameValidationRegExp = NAME_VALIDATION_REGEX;
 
   @override
   void initState() {
@@ -85,6 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
             return const Center(child: CircularProgressIndicator());
           }
           UserProfile user = snapshots.data!.docs.first.data();
+          // _controller.text = user.name!;
           return GestureDetector(
             onTap: () {
               Navigator.pushNamed(context, "/user-profile", arguments: user);
@@ -157,20 +160,9 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListTile(
       title: const Text("Logout"),
       onTap: () async {
-        bool result = await _authService.logout();
-        if (result) {
-          _alertService.showToast(
-            text: "Logged out successfully",
-            icon: Icons.check,
-          );
-          _navigationService.goBack();
-          _navigationService.pushReplacementNamed("/login");
-        } else {
-          _alertService.showToast(
-            text: "Error logging out",
-            icon: Icons.error,
-          );
-        }
+        showDialog(
+            context: context,
+            builder: (context) => _logoutConfirmationDialog());
       },
       leading: const Icon(Icons.logout),
     );
@@ -182,10 +174,19 @@ class _SettingsPageState extends State<SettingsPage> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              labelText: "New Display Name",
+          Form(
+            key: _changeNameFormKey,
+            child: TextFormField(
+              controller: _controller,
+              validator: (value) {
+                if (value != null && nameValidationRegExp.hasMatch(value)) {
+                  return null;
+                }
+                return "Name should contain Alphabets only";
+              },
+              decoration: InputDecoration(
+                labelText: "New Display Name",
+              ),
             ),
           ),
         ],
@@ -193,20 +194,28 @@ class _SettingsPageState extends State<SettingsPage> {
       actions: [
         IconButton(
             onPressed: () async {
-              final result =
-                  await _databaseService.changeUserName(_controller.text);
-              if (result) {
-                _alertService.showToast(
-                  text: "Name changed successfully",
-                  icon: Icons.check,
-                );
+              if (_changeNameFormKey.currentState?.validate() ?? false) {
+                _changeNameFormKey.currentState?.save();
+                final result =
+                    await _databaseService.changeUserName(_controller.text);
+                if (result) {
+                  _alertService.showToast(
+                    text: "Name changed successfully",
+                    icon: Icons.check,
+                  );
+                } else {
+                  _alertService.showToast(
+                    text: "Name change failed",
+                    icon: Icons.error,
+                  );
+                }
+                _navigationService.goBack();
               } else {
                 _alertService.showToast(
-                  text: "Name change failed",
+                  text: "Invalid Name",
                   icon: Icons.error,
                 );
               }
-              _navigationService.goBack();
             },
             icon: Icon(Icons.check)),
         IconButton(
@@ -214,6 +223,40 @@ class _SettingsPageState extends State<SettingsPage> {
               _navigationService.goBack();
             },
             icon: Icon(Icons.close)),
+      ],
+    );
+  }
+
+  Widget _logoutConfirmationDialog() {
+    return AlertDialog(
+      title: const Text("Are you sure to logout?"),
+      actions: [
+        MaterialButton(
+          onPressed: () async {
+            bool result = await _authService.logout();
+            if (result) {
+              _alertService.showToast(
+                text: "Logged out successfully",
+                icon: Icons.check,
+              );
+              _navigationService.goBack();
+              _navigationService.goBack();
+              _navigationService.pushReplacementNamed("/login");
+            } else {
+              _alertService.showToast(
+                text: "Error logging out",
+                icon: Icons.error,
+              );
+            }
+          },
+          child: const Text("Yes"),
+        ),
+        MaterialButton(
+          onPressed: () {
+            _navigationService.goBack();
+          },
+          child: const Text("No"),
+        ),
       ],
     );
   }

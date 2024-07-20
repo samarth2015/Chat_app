@@ -67,7 +67,7 @@ class AuthService {
   }
   
   Future<bool> logout() async {
-    try {
+    try { 
       await _firebaseAuth.signOut();
       return true;
     } catch (e) {
